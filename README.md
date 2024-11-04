@@ -7,15 +7,19 @@
 
 ## kui tahate runnida
 
-siis tippige see sisse
+siis tippige see sisse ja vaadake et olete root kasutajaga!!
 
 ```bash
-curl -sL https://raw.githubusercontent.com/NewSchoolAlt/utils/main/ssh%20root.sh | sudo bash
+apt-get install curl
+
+```
+```bash
+curl -sL https://raw.githubusercontent.com/NewSchoolAlt/utils/main/ssh%20root.sh | bash
 
 ```
 või kui ei viitsi curli alla laadida, siis laege winget noh
 ```bash
-wget -qO- https://raw.githubusercontent.com/NewSchoolAlt/utils/main/ssh%20root.sh | sudo bash
+wget -qO- https://raw.githubusercontent.com/NewSchoolAlt/utils/main/ssh%20root.sh | bash
 
 
 ```
