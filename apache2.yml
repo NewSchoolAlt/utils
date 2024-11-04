@@ -1,0 +1,35 @@
+---
+- hosts: webservers
+  tasks:
+    - name: install python3
+      apt:
+        name: python3
+        update_cache: yes
+        state: latest
+
+    - name: install apache2
+      apt:
+        name: apache2
+        update_cache: yes
+        state: latest
+
+    - name: Create public_html directory for user
+      file:
+        path: /home/user/public_html
+        owner: user
+        group: user
+        mode: '0755'
+        state: directory
+
+    - name: Enable userdir module for Apache
+      apache2_module:
+        name: userdir
+
+    - name: Restart Apache
+      service:
+        name: apache2
+        state: restarted
+
+    - name: Replace index.html with custom content
+      lineinfile: dest=/var/www/html/index.html regexp="Apache2 Debian Default Page" line="OLEVI lehekylg raibe" state=present
+
