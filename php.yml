@@ -1,0 +1,24 @@
+  GNU nano 5.4                           /etc/ansible/playbooks/php.yml                                     ---
+- name: Installime PHP ja seam PHP info lehe
+  hosts: webservers
+  become: yes
+  tasks:
+    - name: Install PHP
+      apt:
+        name: php
+        state: latest
+        update_cache: yes
+
+    - name: loome PHP info file
+      copy:
+        dest: /var/www/html/phpinfo.php
+        content: "<?php phpinfo(); ?>"
+        owner: www-data
+        group: www-data
+        mode: '0644'
+
+  handlers:
+    - name: Restart Apache
+      service:
+        name: apache2
+        state: restarted
