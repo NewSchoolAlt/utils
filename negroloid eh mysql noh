@@ -1,0 +1,57 @@
+---
+- hosts: webservers
+  become: true
+  vars:
+    ansible_python_interpreter: /usr/bin/python3  # Explicitly set Python 3 for compatibility
+    mysql_root_password: qwerty  # Define MySQL root password as a variable
+
+  tasks:
+    - name: Create directory for downloads
+      ansible.builtin.file:
+        path: /root/allalaadimised
+        owner: root
+        group: root
+        mode: '0755'
+        state: directory
+
+    - name: Update APT cache
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: Install default MySQL server
+      ansible.builtin.apt:
+        name: default-mysql-server
+        state: present
+        update_cache: yes
+
+    - name: Install Python MySQL dependency
+      ansible.builtin.apt:
+        name: python3-mysqldb  # Use Python 3 package
+        state: latest
+        update_cache: yes
+
+    - name: Create MySQL root login configuration file
+      ansible.builtin.copy:
+        dest: /root/.my.cnf
+        owner: root
+        group: root
+        mode: '0600'
+        content: |
+          [client]
+          user = root
+          password = {{ mysql_root_password }}
+
+    - name: Set MySQL root user password and ensure it has full privileges
+      community.mysql.mysql_user:
+        name: root
+        password: "{{ mysql_root_password }}"
+        priv: "*.*:ALL,GRANT"
+        host_all: true
+        state: present
+
+    - name: Restart MySQL service to apply changes
+      ansible.builtin.service:
+        name: mysql
+        state: restarted
+
+
