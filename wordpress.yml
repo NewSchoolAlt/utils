@@ -1,0 +1,60 @@
+---
+- name: Set up WordPress with database
+  hosts: webservers  # Replace with your actual host group or IP
+  become: yes  # This is to run tasks with sudo if necessary
+  vars:
+    db_name: wordpress  # Use 'wordpress' as the database name
+    db_user: wpuser
+    db_password: qwerty
+    db_host: webservers  # Use 'webservers' as the host name
+
+  tasks:
+    - name: Create the database 'wordpress' for WordPress
+      mysql_db:
+        name: "{{ db_name }}"
+        state: present
+
+    - name: Create user 'wpuser' with password and grant privileges
+      mysql_user:
+        name: "{{ db_user }}"
+        password: "{{ db_password }}"
+        priv: "{{ db_name }}.*:ALL"
+        state: present
+        check_implicit_admin: yes
+
+    - name: Download and unpack WordPress
+      unarchive:
+        src: https://wordpress.org/latest.tar.gz
+        dest: /var/www/html/
+        remote_src: yes
+
+    - name: Change ownership of WordPress directory to www-data
+      file:
+        path: /var/www/html/wordpress/
+        state: directory
+        recurse: yes
+        owner: www-data
+
+    - name: Copy WordPress configuration file
+      copy:
+        src: /var/www/html/wordpress/wp-config-sample.php
+        dest: /var/www/html/wordpress/wp-config.php
+        remote_src: yes
+
+    - name: Configure WordPress to connect to the correct database
+      lineinfile:
+        path: /var/www/html/wordpress/wp-config.php
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+        backup: yes  # Create a backup of wp-config.php before making changes
+      loop:
+        - { regexp: "define\\(\\'DB_NAME\\',\\s*\\'.*\\'\\);", line: "define( 'DB_NAME', '{{ db_name }}' );" }
+        - { regexp: "define\\(\\'DB_USER\\',\\s*\\'.*\\'\\);", line: "define( 'DB_USER', '{{ db_user }}' );" }
+        - { regexp: "define\\(\\'DB_PASSWORD\\',\\s*\\'.*\\'\\);", line: "define( 'DB_PASSWORD', '{{ db_password }}' );" }
+        - { regexp: "define\\(\\'DB_HOST\\',\\s*\\'.*\\'\\);", line: "define( 'DB_HOST', '{{ db_host }}' );" }
+
+    - name: Restart MySQL service
+      service:
+        name: mysql
+        state: restarted
